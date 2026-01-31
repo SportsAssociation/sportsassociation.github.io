@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RRSA Officials Portal • Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:,">
+  <meta name="theme-color" content="#0b0f14" />
+</head>
+
+<body class="app-shell">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">RRSA</div>
+        <div class="brand-meta">
+          <div class="brand-name">Officials Portal</div>
+          <div class="brand-sub">Attendance & Performance</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Navigation</div>
+        <nav id="sidebarNav" class="nav"></nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="whoami">
+          <div class="muted tiny">Signed in as</div>
+          <div id="userLabel" class="whoami-name">—</div>
+        </div>
+
+        <div class="sidebar-actions">
+          <button id="themeBtn" class="btn ghost" type="button">Theme</button>
+          <button id="logoutBtn" class="btn danger" type="button">Logout</button>
+        </div>
+
+        <div class="muted tiny" style="margin-top:10px">
+          RRSA System v1.2 • LocalStorage
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">
+            <div class="topbar-h1">Dashboard</div>
+            <div class="muted tiny">Role-based access • League-scoped ops</div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <select id="leagueCtx" class="fieldlike" aria-label="League context"></select>
+          <button id="exportCsvBtn" class="btn ghost hidden" type="button">Export CSV</button>
+        </div>
+      </header>
+
+      <section id="view" class="view">
+        <div class="muted">Loading…</div>
+      </section>
+    </main>
+  </div>
+
+  <!-- IMPORTANT: script order -->
+  <script src="js/database.js"></script>
+  <script src="js/roles.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

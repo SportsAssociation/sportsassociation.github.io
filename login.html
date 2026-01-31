@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RRSA Officials Portal • Login</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:,">
+  <meta name="theme-color" content="#0b0f14" />
+</head>
+<body class="auth-page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-mark">RRSA</div>
+        <div>
+          <div class="auth-title">Officials Portal</div>
+          <div class="muted tiny">Attendance & Performance</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="login">Login</button>
+        <button class="tab" data-tab="signup">Invite Signup</button>
+      </div>
+
+      <!-- LOGIN TAB -->
+      <section id="tab-login" class="tabpane">
+        <div class="field">
+          <label>Username</label>
+          <input id="login_user" type="text" autocomplete="username" placeholder="mrv" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="login_pass" type="password" autocomplete="current-password" placeholder="rrsa" />
+        </div>
+
+        <div id="login_msg" class="notice hidden"></div>
+
+        <div class="mini-row" style="justify-content:space-between; align-items:center;">
+          <button id="themeBtn" class="btn ghost" type="button">Theme</button>
+          <button id="login_btn" class="btn" type="button">Login</button>
+        </div>
+
+        <div class="muted tiny" style="margin-top:12px">
+          Demo seed accounts: <b>mrv</b>/<b>rrsa</b>, <b>vp_pox</b>/<b>rrsa</b>, <b>shark</b>/<b>rrsa</b>, <b>will</b>/<b>rrsa</b>
+        </div>
+      </section>
+
+      <!-- SIGNUP TAB -->
+      <section id="tab-signup" class="tabpane hidden">
+        <div class="field">
+          <label>Invite Code</label>
+          <input id="inv_code" type="text" placeholder="RRSA-XXXXXXXX" />
+        </div>
+
+        <div class="mini-row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label>Username</label>
+            <input id="new_user" type="text" placeholder="ref_new" />
+          </div>
+          <div class="field" style="flex:1">
+            <label>Display Name</label>
+            <input id="new_name" type="text" placeholder="Ref New" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input id="new_pass" type="password" placeholder="Meets policy" />
+          <div id="pw_hint" class="muted tiny"></div>
+        </div>
+
+        <div id="signup_msg" class="notice hidden"></div>
+
+        <div class="mini-row" style="justify-content:space-between; align-items:center;">
+          <button id="themeBtn2" class="btn ghost" type="button">Theme</button>
+          <button id="signup_btn" class="btn" type="button">Create Account</button>
+        </div>
+      </section>
+
+      <div class="muted tiny" style="margin-top:14px">
+        RRSA System v1.2 • Client-side (LocalStorage)
+      </div>
+    </div>
+  </div>
+
+  <!-- Script order -->
+  <script src="js/database.js"></script>
+  <script src="js/roles.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    RRSA_DB.init();
+    RRSA_AUTH.applyThemeFromStorage();
+
+    const $ = (s) => document.querySelector(s);
+
+    function show(el, msg, type="info") {
+      el.classList.remove("hidden");
+      el.textContent = msg;
+      el.dataset.type = type;
+    }
+    function hide(el) {
+      el.classList.add("hidden");
+      el.textContent = "";
+      el.dataset.type = "";
+    }
+
+    // Tabs
+    const tabs = document.querySelectorAll(".tab");
+    tabs.forEach(t => t.addEventListener("click", () => {
+      tabs.forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      const k = t.dataset.tab;
+      $("#tab-login").classList.toggle("hidden", k !== "login");
+      $("#tab-signup").classList.toggle("hidden", k !== "signup");
+      hide($("#login_msg"));
+      hide($("#signup_msg"));
+      renderPwHint();
+    }));
+
+    // Theme buttons
+    $("#themeBtn").addEventListener("click", RRSA_AUTH.toggleTheme);
+    $("#themeBtn2").addEventListener("click", RRSA_AUTH.toggleTheme);
+
+    function renderPwHint() {
+      const pol = RRSA_DB.getSettings().authPolicy || {};
+      $("#pw_hint").textContent =
+        `Policy: min ${pol.minLen ?? 8} chars, letter=${pol.requireLetter ?? true}, number=${pol.requireNumber ?? true}.`;
+    }
+    renderPwHint();
+
+    // Auto redirect if already logged in
+    if (RRSA_AUTH.isLoggedIn()) {
+      location.replace("dashboard.html");
+    }
+
+    // Login
+    $("#login_btn").addEventListener("click", () => {
+      hide($("#login_msg"));
+      const u = $("#login_user").value;
+      const p = $("#login_pass").value;
+      const res = RRSA_AUTH.login(u, p);
+      if (!res.ok) {
+        show($("#login_msg"), res.message || "Login failed.", "danger");
+        return;
+      }
+      location.replace("dashboard.html");
+    });
+
+    // Invite signup
+    $("#signup_btn").addEventListener("click", () => {
+      hide($("#signup_msg"));
+
+      try {
+        const code = $("#inv_code").value.trim();
+        const username = $("#new_user").value.trim().toLowerCase();
+        const displayName = $("#new_name").value.trim();
+        const password = $("#new_pass").value;
+
+        const chk = RRSA_AUTH.validatePassword(password);
+        if (!chk.ok) throw new Error(chk.message);
+
+        const created = RRSA_DB.redeemInvite({ code, username, password, displayName });
+        RRSA_DB.audit(created.username, "signup", "Account created via invite.");
+        show($("#signup_msg"), `Account created. You can now login as @${created.username}.`, "ok");
+      } catch (err) {
+        show($("#signup_msg"), String(err.message || err), "danger");
+      }
+    });
+  </script>
+</body>
+</html>
